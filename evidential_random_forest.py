@@ -95,31 +95,16 @@ class ERF(BaseEstimator, ClassifierMixin):
 
     def get_estimators(self):
         return self.estimators
-        
 
     def predict_proba(self, X):
         if not self._fitted:
-            raise NotFittedError("The classifier hasn't been fitted yet")
+            raise NotFittedError("The classifier hasn not been fitted yet")
 
-        try:
-            # 尝试获取predict的返回值
-            result = self.predict(X, return_bba=True)
+        _, y_pred = self.predict(X, return_bba=True)
 
-            # 如果是元组，说明predict已经修复
-            if isinstance(result, tuple) and len(result) == 2:
-                _, bbas = result
-                predictions = ibelief.decisionDST(bbas.T, 4, return_prob=True)
-                return predictions
-            else:
-                # 否则使用默认概率
-                n_samples = X.shape[0]
-                return np.ones((n_samples, 2)) * 0.5
+        predictions = ibelief.decisionDST(y_pred.T, 4, return_prob=True)
 
-        except Exception as e:
-            print(f"predict_proba出错，使用默认概率: {e}")
-            n_samples = X.shape[0]
-            return np.ones((n_samples, 2)) * 0.5
-
+        return predictions
 
     def predict(self, X, criterion=3, return_bba=False):
         if not self._fitted:

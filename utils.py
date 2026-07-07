@@ -54,52 +54,40 @@ def output_time(flag):
     print(flag, time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(time.time())))
 
 
-def convert_to_mass(y):
-    """将标签转换为基本概率分配 (BPA)
-    据我们任务的真实情况，应该是2分类，为了防止报错，咱们做多分类处理。
-    """
-    # 先确定类别数
-    unique_labels = np.unique(y)
+def convert_to_mass(labels):
+    unique_labels = sorted(list(set(labels)))
+
     num_classes = len(unique_labels)
 
-    if num_classes == 2:
-        # 二分类情况：正类和负类
-        mass_function = np.zeros((len(y), 2))
-        for i in range(len(y)):
-            if y[i] == 1:
-                mass_function[i, 0] = 1  # 正类
-                mass_function[i, 1] = 0  # 负类
-            else:
-                mass_function[i, 0] = 0  # 正类
-                mass_function[i, 1] = 1  # 负类
-    else:
-        # 三分类情况：正类、负类、不确定类
-        mass_function = np.zeros((len(y), 3))
-        for i in range(len(y)):
-            if y[i] == 1:
-                mass_function[i, 0] = 1  # 正类
-                mass_function[i, 1] = 0  # 负类
-                mass_function[i, 2] = 0  # 不确定类
-            elif y[i] == -1:
-                mass_function[i, 0] = 0  # 正类
-                mass_function[i, 1] = 1  # 负类
-                mass_function[i, 2] = 0  # 不确定类
-            else:
-                # 如果是0或其他值，作为不确定类
-                mass_function[i, 0] = 0.25  # 正类
-                mass_function[i, 1] = 0.25  # 负类
-                mass_function[i, 2] = 0.5  # 不确定类
+    n = len(labels)
 
-    return mass_function
+    mass_functions = []
+
+    if n == 0:
+        mass_function = np.full(num_classes, 1 / num_classes)
+        mass_functions.append(mass_function)
+    else:
+        for label in labels:
+            mass_function = np.zeros(num_classes + 1)
+            if label in unique_labels:
+                index = unique_labels.index(label)
+                mass_function[index] = random.uniform(0.5, 1.0)
+                mass_function[1 - index] = random.uniform(0, 0.5)
+                mass_function[2] = (mass_function[0] + mass_function[1]) / 2
+            mass_functions.append(mass_function)
+
+    mass_functions = np.array(mass_functions)
+
+    sums = np.sum(mass_functions, axis=1, keepdims=True)
+    mass_functions_normalized_array = mass_functions / sums
+
+    return mass_functions_normalized_array
+
 
 import numpy as np
 from sklearn.metrics import confusion_matrix
 
 def to_binary_labels(y):
-    """
-    统一标签到 0 / 1：
-    约定 1 为正类，其它（-1, 0 等）都视为 0
-    """
     y = np.asarray(y).astype(int)
     return (y == 1).astype(int)
 
@@ -107,8 +95,7 @@ def to_binary_labels(y):
 def safe_classification_metrics(y_true, y_pred, smooth=0.5):
     """
     基于混淆矩阵的分类指标：
-    - 优先使用“原始”混淆矩阵
-    - 只有在出现极端情况时（某个格子为 0）才启用平滑
+    - 启用平滑
     返回：ACC, MCC, SN, SP
     """
 
