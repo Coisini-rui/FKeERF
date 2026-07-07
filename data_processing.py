@@ -28,7 +28,7 @@ def load_data(dataset_dir):
     return sequences
 
 
-def one_hot_encode(sequences, maxlen=None):   # maxlen可以自定义修改
+def one_hot_encode(sequences, maxlen=None):    # maxlen可以自定义修改
     """
     对RNA序列进行独热编码，并填充序列长度（PyTorch版本）。
     sequences: 字符串列表，RNA序列。
