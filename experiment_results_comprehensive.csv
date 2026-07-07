@@ -1,0 +1,6 @@
+Method,ACC,MCC,Sensitivity,Specificity
+Base k-mer,0.7166666666666666,0.3,0.8,0.5
+Structure,0.7166666666666666,0.3,0.8,0.5
+Multi-scale,0.7166666666666666,0.3,0.8,0.5
+Triple-Channel,0.2833333333333333,-0.3,0.2,0.5
+All Combined,0.7166666666666666,0.3,0.8,0.5
